@@ -1,0 +1,16 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout title="Contact Us">
+  <div class="page">
+    <h1>Contact</h1>
+    <p>Have a tip or want to write for us? Reach out below.</p>
+    <!-- Note: Static sites require a form provider like Formspree or Netlify Forms to process emails -->
+    <form action="https://formspree.io/your-email-here" method="POST" class="fm">
+      <input type="text" name="name" placeholder="Your Name" required />
+      <input type="email" name="email" placeholder="Your Email" required />
+      <textarea name="message" placeholder="How can we help?" required></textarea>
+      <button type="submit" class="more">Send Message</button>
+    </form>
+  </div>
+</BaseLayout>

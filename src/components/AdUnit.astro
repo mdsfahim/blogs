@@ -1,0 +1,11 @@
+---
+const { format = "auto" } = Astro.props;
+---
+<div class="ad-container" style="background:var(--card); border:1px dashed var(--line); padding:16px; text-align:center; border-radius:var(--r); margin:24px 0;">
+  <span style="display:block; font-size:11px; color:var(--mute); margin-bottom:8px; text-transform:uppercase; letter-spacing:1px;">Advertisement</span>
+  
+  <!-- Replace this block with your actual AdSense or media.net snippet -->
+  <div style="min-height:90px; display:flex; align-items:center; justify-content:center; color:var(--ac); font-weight:bold;">
+    Ad Space ({format})
+  </div>
+</div>

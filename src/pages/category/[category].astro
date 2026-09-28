@@ -1,0 +1,29 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+export async function getStaticPaths() {
+  const posts = Object.values(import.meta.glob('../../content/*.md', { eager: true }));
+  // Find all unique categories across all posts
+  const categories = [...new Set(posts.map((p: any) => p.frontmatter.category).filter(Boolean))];
+  
+  return categories.map(category => ({
+    params: { category: category.toLowerCase() },
+    props: { posts: posts.filter((p: any) => p.frontmatter.category.toLowerCase() === category.toLowerCase()) },
+  }));
+}
+
+const { category } = Astro.params;
+const { posts } = Astro.props;
+---
+<BaseLayout title={`Category: ${category}`}>
+  <div class="page">
+    <h1 style="text-transform: capitalize;">Category: {category}</h1>
+    <div class="grid">
+      {posts.map((post: any) => (
+         <a class="card" href={`/post/${post.file.split('/').pop().replace('.md', '')}`}>
+            <div class="b"><h3>{post.frontmatter.title}</h3></div>
+         </a>
+      ))}
+    </div>
+  </div>
+</BaseLayout>

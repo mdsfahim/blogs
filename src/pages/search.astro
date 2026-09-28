@@ -1,0 +1,44 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+// Pre-load all posts at build time
+const posts = Object.values(import.meta.glob('../content/*.md', { eager: true }));
+---
+<BaseLayout title="Search Articles">
+  <div class="page">
+    <h1>Search</h1>
+    <div class="fm">
+      <input type="text" id="searchInput" placeholder="Type to search posts..." autofocus />
+    </div>
+    
+    <div id="searchResults" style="margin-top: 24px; display:flex; flex-direction:column; gap:12px;">
+      {posts.map((post: any) => (
+        <a 
+          href={`/post/${post.file.split('/').pop().replace('.md', '')}`} 
+          class="search-item box" 
+          data-title={post.frontmatter.title.toLowerCase()} 
+          style="display:none;"
+        >
+          <span class="badge" style="background:var(--ac); margin-bottom:8px;">{post.frontmatter.category}</span>
+          <h3 style="margin:0;">{post.frontmatter.title}</h3>
+        </a>
+      ))}
+    </div>
+  </div>
+
+  <script>
+    // Filters the rendered list instantly as the user types
+    const input = document.getElementById('searchInput');
+    const items = document.querySelectorAll('.search-item');
+    
+    input.addEventListener('input', (e) => {
+      const term = e.target.value.toLowerCase();
+      items.forEach(item => {
+        if (term.length > 1 && item.dataset.title.includes(term)) {
+          item.style.display = 'block';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    });
+  </script>
+</BaseLayout>
