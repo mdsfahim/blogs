@@ -1,0 +1,45 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+export async function getStaticPaths() {
+  // Use import.meta.glob instead of Astro.glob
+  const posts = import.meta.glob('../../content/*.md', { eager: true });
+  
+  // Convert the object returned by glob into an array of routes
+  return Object.values(posts).map((post: any) => {
+    // Extract the filename without the .md extension to use as the URL slug
+    const filename = post.file.split('/').pop().replace('.md', '');
+    
+    return {
+      params: { slug: filename },
+      props: { post },
+    };
+  });
+}
+
+const { post } = Astro.props;
+const { Content } = post;
+---
+
+<BaseLayout title={post.frontmatter.title}>
+  <article class="post">
+    <span class="crumb"><a href="/">Home</a> / <span>{post.frontmatter.category}</span></span>
+    <h1>{post.frontmatter.title}</h1>
+    
+    <div class="au">
+      <div class="av">{post.frontmatter.author[0]}</div>
+      <div>
+        <b>{post.frontmatter.author}</b>
+        <div class="meta">
+          <span>{post.frontmatter.date}</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="art hd" style="background:linear-gradient(135deg,#5b4bff,#8f7bff)"></div>
+    
+    <div class="bd">
+      <Content />
+    </div>
+  </article>
+</BaseLayout>

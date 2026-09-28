@@ -1,0 +1,66 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Northlight Magazine - Home">
+  <div class="h2">
+    <h2>Latest stories</h2>
+  </div>
+
+  <!-- The Two-Column Grid (Content + Sidebar) -->
+  <div class="two">
+    
+    <!-- LEFT: Article Grid -->
+    <div>
+      <div class="grid" id="lg">
+        
+        <!-- Placeholder Article Card 1 -->
+        <a class="card" href="/post/my-first-post">
+          <div class="art has-img" style="background:linear-gradient(135deg,#5b4bff,#8f7bff)"></div>
+          <div class="b">
+            <span><span class="badge" style="background:#5b4bff">Tech</span></span>
+            <h3>The quiet web is making a comeback</h3>
+            <p>Personal sites and RSS readers are growing again as people leave the endless feed.</p>
+            <div class="meta">
+              <span>Mdsfahim</span>
+              <span>Sep 28, 2026</span>
+            </div>
+          </div>
+        </a>
+
+        <!-- Placeholder Article Card 2 -->
+        <a class="card" href="/post/my-second-post">
+          <div class="art has-img" style="background:linear-gradient(135deg,#ff5d8f,#ff9a6c)"></div>
+          <div class="b">
+            <span><span class="badge" style="background:#ff5d8f">Design</span></span>
+            <h3>Typography is the cheapest upgrade</h3>
+            <p>Most readers judge a page in seconds, and the typeface does most of the talking.</p>
+            <div class="meta">
+              <span>Mdsfahim</span>
+              <span>Sep 28, 2026</span>
+            </div>
+          </div>
+        </a>
+
+      </div>
+    </div>
+
+    <!-- RIGHT: Sidebar -->
+    <aside>
+      <div class="box">
+        <h3>Popular tags</h3>
+        <div class="chips">
+          <a href="#"><svg class="i"><use href="#i-tag"/></svg>web</a>
+          <a href="#"><svg class="i"><use href="#i-tag"/></svg>design</a>
+          <a href="#"><svg class="i"><use href="#i-tag"/></svg>tech</a>
+        </div>
+      </div>
+      
+      <!-- Placeholder Sidebar Ad -->
+      <div style="border:1.5px dashed #5b4bff;border-radius:10px;height:250px;display:flex;align-items:center;justify-content:center;color:#5b4bff;margin-top:20px;">
+        300x250 Ad Slot
+      </div>
+    </aside>
+
+  </div>
+</BaseLayout>
