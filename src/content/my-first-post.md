@@ -3,6 +3,7 @@ title: "Why I Moved to GitHub Pages"
 date: "2026-09-28"
 author: "Mdsfahim"
 category: "Tech"
+tags: ["web", "design"]
 ---
 
 This is my first post on my new Astro blog! 

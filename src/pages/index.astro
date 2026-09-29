@@ -1,66 +1,68 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import AdUnit from '../components/AdUnit.astro';
+
+// Fetch all markdown posts
+const posts = Object.values(import.meta.glob('../content/*.md', { eager: true }));
 ---
 
-<BaseLayout title="Northlight Magazine - Home">
-  <div class="h2">
-    <h2>Latest stories</h2>
+<BaseLayout title="Northlight — Magazine">
+  
+  <!-- Topic Categories Grid -->
+  <div class="h2"><h2>Topics</h2><a href="/categories">All topics <svg class="i"><use href="#i-arrow"/></svg></a></div>
+  <div class="cgrid">
+    <a class="ct" style="background:linear-gradient(135deg,#5b4bff,#8f7bff)" href="/category/tech">
+      <svg class="i"><use href="#i-cpu"/></svg><div>Tech<br><small>View stories</small></div>
+    </a>
+    <a class="ct" style="background:linear-gradient(135deg,#ff5d8f,#ff9a6c)" href="/category/design">
+      <svg class="i"><use href="#i-pen"/></svg><div>Design<br><small>View stories</small></div>
+    </a>
+    <a class="ct" style="background:linear-gradient(135deg,#0ea5a5,#4ad6b8)" href="/category/travel">
+      <svg class="i"><use href="#i-plane"/></svg><div>Travel<br><small>View stories</small></div>
+    </a>
   </div>
 
-  <!-- The Two-Column Grid (Content + Sidebar) -->
   <div class="two">
-    
-    <!-- LEFT: Article Grid -->
+    <!-- Main Content Area (Left) -->
     <div>
-      <div class="grid" id="lg">
-        
-        <!-- Placeholder Article Card 1 -->
-        <a class="card" href="/post/my-first-post">
-          <div class="art has-img" style="background:linear-gradient(135deg,#5b4bff,#8f7bff)"></div>
-          <div class="b">
-            <span><span class="badge" style="background:#5b4bff">Tech</span></span>
-            <h3>The quiet web is making a comeback</h3>
-            <p>Personal sites and RSS readers are growing again as people leave the endless feed.</p>
-            <div class="meta">
-              <span>Mdsfahim</span>
-              <span>Sep 28, 2026</span>
+      <div class="h2"><h2>Latest stories</h2></div>
+      <div class="grid">
+        {posts.map((post: any) => (
+          <a class="card" href={`/post/${post.file.split('/').pop().replace('.md', '')}`}>
+            <div class="art" style="background:linear-gradient(135deg,#5b4bff,#8f7bff)">
+              <svg viewBox="0 0 24 24"><use href="#i-cpu"/></svg>
             </div>
-          </div>
-        </a>
-
-        <!-- Placeholder Article Card 2 -->
-        <a class="card" href="/post/my-second-post">
-          <div class="art has-img" style="background:linear-gradient(135deg,#ff5d8f,#ff9a6c)"></div>
-          <div class="b">
-            <span><span class="badge" style="background:#ff5d8f">Design</span></span>
-            <h3>Typography is the cheapest upgrade</h3>
-            <p>Most readers judge a page in seconds, and the typeface does most of the talking.</p>
-            <div class="meta">
-              <span>Mdsfahim</span>
-              <span>Sep 28, 2026</span>
+            <div class="b">
+              <span><span class="badge" style="background:#5b4bff">{post.frontmatter.category}</span></span>
+              <h3>{post.frontmatter.title}</h3>
+              <p>Read full story...</p>
+              <div class="meta">
+                <span>{post.frontmatter.author}</span>
+                <span><svg class="i"><use href="#i-clock"/></svg>5 min read</span>
+                <span>{post.frontmatter.date}</span>
+              </div>
             </div>
-          </div>
-        </a>
-
+          </a>
+        ))}
       </div>
     </div>
 
-    <!-- RIGHT: Sidebar -->
+    <!-- Sidebar Area (Right) -->
     <aside>
+      <AdUnit format="300x250" />
+      
       <div class="box">
         <h3>Popular tags</h3>
         <div class="chips">
-          <a href="#"><svg class="i"><use href="#i-tag"/></svg>web</a>
-          <a href="#"><svg class="i"><use href="#i-tag"/></svg>design</a>
-          <a href="#"><svg class="i"><use href="#i-tag"/></svg>tech</a>
+          <a href="/tags/web"><svg class="i"><use href="#i-tag"/></svg>web</a>
+          <a href="/tags/design"><svg class="i"><use href="#i-tag"/></svg>design</a>
+          <a href="/tags/tech"><svg class="i"><use href="#i-tag"/></svg>tech</a>
         </div>
       </div>
       
-      <!-- Placeholder Sidebar Ad -->
-      <div style="border:1.5px dashed #5b4bff;border-radius:10px;height:250px;display:flex;align-items:center;justify-content:center;color:#5b4bff;margin-top:20px;">
-        300x250 Ad Slot
+      <div class="ad2 stick">
+        <AdUnit format="160x600" />
       </div>
     </aside>
-
   </div>
 </BaseLayout>

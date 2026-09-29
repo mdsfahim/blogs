@@ -1,0 +1,15 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+const posts = Object.values(import.meta.glob('../content/*.md', { eager: true }));
+const categories = [...new Set(posts.map((p: any) => p.frontmatter.category).filter(Boolean))];
+---
+<BaseLayout title="All Topics">
+  <div class="page">
+    <h1>All Topics</h1>
+    <div class="chips">
+      {categories.map(cat => (
+        <a href={`/category/${cat.toLowerCase()}`}>{cat}</a>
+      ))}
+    </div>
+  </div>
+</BaseLayout>
