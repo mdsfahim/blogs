@@ -1,11 +1,41 @@
 ---
-const { format = "auto" } = Astro.props;
+const { format, className = "" } = Astro.props;
+
+// Map the requested ad size to your specific script keys
+const adKeys = {
+  "320x50": "adb239c1077ddf2e244c5878f9bf9e97",
+  "468x60": "4d15272b08c73a67b1384b4f54af8359",
+  "300x250": "aa86faa63720347cad40d0591eaedb62",
+  "160x600": "5029679d7a78754e1b7ec6f64b42f3f7",
+  "728x90": "a877757e9b28ec5392f9c016ed01c939",
+  "160x300": "dbfece14247eeb9272ddc30e89519fbc"
+};
+
+const key = adKeys[format];
+let w = 0, h = 0;
+
+if (key) {
+  [w, h] = format.split('x').map(Number);
+}
+
+// Generate the raw HTML string for Astro to inject statically
+const scriptHtml = key ? `
+  <script type="text/javascript">
+    atOptions = {
+      'key' : '${key}',
+      'format' : 'iframe',
+      'height' : ${h},
+      'width' : ${w},
+      'params' : {}
+    };
+  </script>
+  <script type="text/javascript" src="https://movementssubscriptionobjection.com/${key}/invoke.js"></script>
+` : '';
 ---
-<div class="ad-container" style="background:var(--card); border:1px dashed var(--line); padding:16px; text-align:center; border-radius:var(--r); margin:24px 0;">
-  <span style="display:block; font-size:11px; color:var(--mute); margin-bottom:8px; text-transform:uppercase; letter-spacing:1px;">Advertisement</span>
-  
-  <!-- Replace this block with your actual AdSense or media.net snippet -->
-  <div style="min-height:90px; display:flex; align-items:center; justify-content:center; color:var(--ac); font-weight:bold;">
-    Ad Space ({format})
+
+{key && (
+  <div class={`ad ${className}`} style="margin: 18px auto; text-align: center; overflow: hidden;">
+    <small style="display: block; font-size: 11px; color: var(--mute); font-weight: 600; margin-bottom: 4px;">Advertisement</small>
+    <div style={`min-width: ${w}px; min-height: ${h}px; display: flex; justify-content: center;`} set:html={scriptHtml}></div>
   </div>
-</div>
+)}

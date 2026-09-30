@@ -1,5 +1,5 @@
 ---
-const { title = "Northlight — Magazine" } = Astro.props;
+const { title = "Northlight — Magazine", description = "Stories on technology, design, travel, lifestyle, culture and business." } = Astro.props;
 ---
 <!DOCTYPE html>
 <html lang="en">
@@ -7,13 +7,13 @@ const { title = "Northlight — Magazine" } = Astro.props;
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>{title}</title>
+<meta name="description" content={description}>
 <meta name="theme-color" content="#5b4bff">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27><rect width=%2732%27 height=%2732%27 rx=%278%27 fill=%27%235b4bff%27/><path d=%27M9 23V9l14 14V9%27 stroke=%27white%27 stroke-width=%273%27 fill=%27none%27/></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&family=Lora:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
-<!-- Original SVG Sprites -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
 <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></symbol>
 <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></symbol>
@@ -37,6 +37,7 @@ const { title = "Northlight — Magazine" } = Astro.props;
 <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 20h18M6 16v-5M11 16V6M16 16v-8"/></symbol>
 </defs></svg>
 
+<a class="skip" href="#app">Skip to content</a>
 <div id="prog"></div>
 <header><div class="w"><div class="bar">
   <a class="logo" href="/"><span class="mk"><svg class="i"><use href="#i-arrow"/></svg></span>Northlight</a>
@@ -44,6 +45,7 @@ const { title = "Northlight — Magazine" } = Astro.props;
     <a href="/">Home</a>
     <a href="/categories">Topics</a>
     <a href="/tags">Tags</a>
+    <a href="/about">About</a>
   </nav>
   <div class="sp"></div>
   <button class="sbtn" id="sb" aria-label="Search"><svg class="i"><use href="#i-search"/></svg><span>Search stories…</span><kbd>/</kbd></button>
@@ -56,7 +58,6 @@ const { title = "Northlight — Magazine" } = Astro.props;
 
 <footer><div class="w"><span>© <span id="yr"></span> Northlight Magazine</span><nav class="flinks" aria-label="Footer"><a href="/about">About</a><a href="/contact">Contact</a></nav></div></footer>
 
-<!-- Mobile Bottom Navigation -->
 <nav class="bn" aria-label="Mobile">
   <a href="/"><svg class="i"><use href="#i-home"/></svg>Home</a>
   <a href="/categories"><svg class="i"><use href="#i-grid"/></svg>Topics</a>
@@ -64,18 +65,14 @@ const { title = "Northlight — Magazine" } = Astro.props;
   <button class="th"><svg class="i moon"><use href="#i-moon"/></svg><svg class="i sun"><use href="#i-sun"/></svg>Theme</button>
 </nav>
 
-<!-- Search Modal -->
 <div id="so" role="dialog" aria-modal="true" aria-label="Search">
   <div class="sm">
     <div class="si"><svg class="i"><use href="#i-search"/></svg><input id="sq" autocomplete="off" placeholder="Search titles, topics, tags or any line in a story" aria-label="Search"><button id="sx">Esc</button></div>
-    <div class="sr" id="sr">
-      <div class="none">Search integration requires your Astro index.</div>
-    </div>
+    <div class="sr" id="sr"></div>
   </div>
 </div>
 
 <script is:inline>
-  // UI Interactivity Script
   const $ = s => document.querySelector(s);
   
   // Theme Toggle
@@ -86,23 +83,51 @@ const { title = "Northlight — Magazine" } = Astro.props;
   });
   try { document.documentElement.dataset.t = localStorage.getItem('t') || (matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light') } catch (e) { document.documentElement.dataset.t = 'light' }
   
-  // Progress Bar
-  addEventListener('scroll', () => {
-    const h = document.documentElement;
-    $('#prog').style.width = (h.scrollTop / (h.scrollHeight - h.clientHeight || 1) * 100) + '%'
-  }, { passive: true });
-  
+  // Progress & Footer Year
+  addEventListener('scroll', () => { const h = document.documentElement; $('#prog').style.width = (h.scrollTop / (h.scrollHeight - h.clientHeight || 1) * 100) + '%' }, { passive: true });
   if ($('#yr')) $('#yr').textContent = new Date().getFullYear();
 
-  // Search Modal Toggles
+  // Search Logic
+  let searchData = [];
   let lastFocus = null;
-  const openSearch = () => { lastFocus = document.activeElement; $('#so').classList.add('on'); document.body.style.overflow = 'hidden'; const i = $('#sq'); i.value = ''; setTimeout(() => i.focus(), 30) };
-  const closeSearch = () => { $('#so').classList.remove('on'); document.body.style.overflow = ''; if (lastFocus && lastFocus.focus) lastFocus.focus() };
+  const sq = $('#sq'), sr = $('#sr'), so = $('#so');
+
+  const openSearch = async () => { 
+    lastFocus = document.activeElement;
+    so.classList.add('on'); 
+    document.body.style.overflow = 'hidden';
+    if (!searchData.length) {
+      const res = await fetch('/search.json');
+      searchData = await res.json();
+    }
+    sq.value = '';
+    sr.innerHTML = '';
+    setTimeout(() => sq.focus(), 30);
+  };
+  
+  const closeSearch = () => { 
+    so.classList.remove('on'); 
+    document.body.style.overflow = '';
+    if (lastFocus && lastFocus.focus) lastFocus.focus(); 
+  };
   
   if ($('#sb')) $('#sb').onclick = openSearch;
   if ($('#sb2')) $('#sb2').onclick = openSearch;
   if ($('#sx')) $('#sx').onclick = closeSearch;
-  $('#so').addEventListener('click', e => { if (e.target.id === 'so') closeSearch() });
+  so.addEventListener('click', e => { if (e.target.id === 'so') closeSearch() });
+  
+  sq.addEventListener('input', (e) => {
+    const q = e.target.value.toLowerCase().trim();
+    if (!q) { sr.innerHTML = ''; return; }
+    const hits = searchData.filter(p => p.title.toLowerCase().includes(q) || (p.category && p.category.toLowerCase().includes(q)) || (p.tags && p.tags.some(t => t.toLowerCase().includes(q))));
+    
+    sr.innerHTML = hits.length ? hits.map(p => `
+      <a class="hit" href="/post/${p.slug}">
+        <div class="art" style="background:linear-gradient(135deg,${p.color[0]},${p.color[1]})"><svg viewBox="0 0 24 24"><use href="#i-${p.icon}"/></svg></div>
+        <div><b>${p.title}</b><q>${p.category}</q></div>
+      </a>
+    `).join('') : `<div class="none"><p>No stories match.</p></div>`;
+  });
 </script>
 </body>
 </html>

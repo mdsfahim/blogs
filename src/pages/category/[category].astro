@@ -1,29 +1,113 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import AdUnit from '../../components/AdUnit.astro';
+import { getCatInfo, getReadTime, formatDate } from '../../utils/helpers.js';
 
 export async function getStaticPaths() {
-  const posts = Object.values(import.meta.glob('../../content/*.md', { eager: true }));
-  // Find all unique categories across all posts
-  const categories = [...new Set(posts.map((p: any) => p.frontmatter.category).filter(Boolean))];
-  
-  return categories.map(category => ({
+  const allRawPosts = Object.values(import.meta.glob('../../content/*.md', { eager: true }));
+  // Find all unique categories across all markdown files
+  const categories = [...new Set(allRawPosts.map((p: any) => p.frontmatter.category).filter(Boolean))];
+
+  return categories.map((category: any) => ({
     params: { category: category.toLowerCase() },
-    props: { posts: posts.filter((p: any) => p.frontmatter.category.toLowerCase() === category.toLowerCase()) },
+    props: { categoryName: category },
   }));
 }
 
-const { category } = Astro.params;
-const { posts } = Astro.props;
+const { categoryName } = Astro.props;
+
+// Fetch and map all posts
+const rawPosts = Object.values(import.meta.glob('../../content/*.md', { eager: true }));
+const allPosts = rawPosts.map((p: any) => ({
+  ...p.frontmatter,
+  slug: p.file.split('/').pop().replace('.md', ''),
+  views: p.frontmatter.views || Math.floor(Math.random() * 5000),
+  dateObj: new Date(p.frontmatter.date),
+  readTime: getReadTime(p.rawContent ? p.rawContent() : p.body)
+}));
+
+// Filter posts for this specific category and sort by date
+const categoryPosts = allPosts.filter(p => p.category.toLowerCase() === categoryName.toLowerCase());
+const sortedPosts = categoryPosts.sort((a, b) => b.dateObj - a.dateObj);
+
+// Sidebar data (Overall Trending + Tags)
+const popularPosts = [...allPosts].sort((a, b) => b.views - a.views).slice(0, 4);
+const tags = [...new Set(allPosts.flatMap(p => p.tags || []))].slice(0, 14);
+
+// Get exact color and icon for this category
+const catInfo = getCatInfo(categoryName);
 ---
-<BaseLayout title={`Category: ${category}`}>
-  <div class="page">
-    <h1 style="text-transform: capitalize;">Category: {category}</h1>
-    <div class="grid">
-      {posts.map((post: any) => (
-         <a class="card" href={`/post/${post.file.split('/').pop().replace('.md', '')}`}>
-            <div class="b"><h3>{post.frontmatter.title}</h3></div>
-         </a>
-      ))}
+
+<BaseLayout title={`${categoryName} Stories - Northlight`} description={`Read the latest ${categoryName} stories.`}>
+  
+  <!-- Category Page Header -->
+  <div class="pg">
+    <span class="crumb"><a href="/">Home</a> / {categoryName}</span>
+    <h1>{categoryName}</h1>
+    <span class="meta">{sortedPosts.length} {sortedPosts.length === 1 ? 'story' : 'stories'}</span>
+  </div>
+
+  <div class="two">
+    <!-- Category Posts Grid -->
+    <div class="grid" style="margin-top:18px">
+      {sortedPosts.length > 0 ? (
+        sortedPosts.map((post, i) => (
+          <>
+            {i === 2 && <AdUnit code="" className="native" />} <!-- Native ad slot injected after 2nd post -->
+            <a class="card" href={`/post/${post.slug}`}>
+              <div class="art" style={`background:linear-gradient(135deg,${catInfo.c[0]},${catInfo.c[1]})`}>
+                <svg viewBox="0 0 24 24"><use href={`#i-${catInfo.k}`}/></svg>
+              </div>
+              <div class="b">
+                <span><span class="badge" style={`background:${catInfo.c[0]}`}>{post.category}</span></span>
+                <h3>{post.title}</h3>
+                <div class="meta">
+                  <span>{post.author}</span>
+                  <span><svg class="i"><use href="#i-clock"/></svg>{post.readTime} min</span>
+                  <span>{formatDate(post.date)}</span>
+                </div>
+              </div>
+            </a>
+          </>
+        ))
+      ) : (
+        <p class="meta">No stories found.</p>
+      )}
     </div>
+
+    <!-- Sidebar (Matches Homepage) -->
+    <aside>
+      <AdUnit code="" />
+      
+      <div class="box">
+        <h3>Trending</h3>
+        {popularPosts.map(post => {
+          const popCatInfo = getCatInfo(post.category);
+          return (
+            <a class="row" href={`/post/${post.slug}`}>
+              <div class="art" style={`background:linear-gradient(135deg,${popCatInfo.c[0]},${popCatInfo.c[1]})`}>
+                <svg viewBox="0 0 24 24"><use href={`#i-${popCatInfo.k}`}/></svg>
+              </div>
+              <div>
+                <span class="meta">{post.category}</span>
+                <h4>{post.title}</h4>
+                <span class="meta"><span><svg class="i"><use href="#i-eye"/></svg>{post.views.toLocaleString()}</span></span>
+              </div>
+            </a>
+          )
+        })}
+      </div>
+      
+      <div class="box">
+        <h3>Popular tags</h3>
+        <div class="chips">
+          {tags.map(tag => (
+            <a href={`/tags/${tag}`}><svg class="i"><use href="#i-tag"/></svg>{tag}</a>
+          ))}
+        </div>
+      </div>
+      
+      <div class="ad2 stick"><AdUnit code="" /></div>
+    </aside>
   </div>
 </BaseLayout>

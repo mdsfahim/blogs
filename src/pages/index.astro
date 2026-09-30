@@ -1,68 +1,147 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import AdUnit from '../components/AdUnit.astro';
+import { getCatInfo, CATS, getReadTime, formatDate } from '../utils/helpers.js';
 
-// Fetch all markdown posts
-const posts = Object.values(import.meta.glob('../content/*.md', { eager: true }));
+const rawPosts = Object.values(import.meta.glob('../content/*.md', { eager: true }));
+const posts = rawPosts.map((p: any) => ({
+  ...p.frontmatter,
+  slug: p.file.split('/').pop().replace('.md', ''),
+  views: p.frontmatter.views || Math.floor(Math.random() * 5000),
+  dateObj: new Date(p.frontmatter.date),
+  readTime: getReadTime(p.rawContent ? p.rawContent() : p.body)
+}));
+
+const sortedPosts = [...posts].sort((a, b) => b.dateObj - a.dateObj);
+const heroPosts = sortedPosts.slice(0, 4);
+const gridPosts = sortedPosts.slice(4, 10);
+const popularPosts = [...posts].sort((a, b) => b.views - a.views).slice(0, 4);
+const tags = [...new Set(posts.flatMap(p => p.tags || []))].slice(0, 14);
+const categories = Object.keys(CATS);
 ---
 
 <BaseLayout title="Northlight — Magazine">
   
-  <!-- Topic Categories Grid -->
+  <!-- Hero Slider -->
+  <div class="sl" id="sl">
+    {heroPosts.map((post, i) => {
+      const catInfo = getCatInfo(post.category);
+      return (
+        <a class={`sd ${i === 0 ? 'on' : ''}`} href={`/post/${post.slug}`}>
+          <div class="art" style={`background:linear-gradient(135deg,${catInfo.c[0]},${catInfo.c[1]})`}>
+            <svg viewBox="0 0 24 24"><use href={`#i-${catInfo.k}`}/></svg>
+          </div>
+          <div class="tx">
+            <span><span class="badge" style="background:#ffffff33">{post.category}</span></span>
+            <h1>{post.title}</h1>
+            <div class="meta">
+              <span>{post.author}</span>
+              <span><svg class="i"><use href="#i-clock"/></svg>{post.readTime} min</span>
+              <span>{formatDate(post.date)}</span>
+            </div>
+          </div>
+        </a>
+      )
+    })}
+    <div class="dots">
+      {heroPosts.map((_, i) => (
+        <button class={i === 0 ? 'on' : ''} data-i={i} aria-label={`Slide ${i+1}`}></button>
+      ))}
+    </div>
+  </div>
+
   <div class="h2"><h2>Topics</h2><a href="/categories">All topics <svg class="i"><use href="#i-arrow"/></svg></a></div>
   <div class="cgrid">
-    <a class="ct" style="background:linear-gradient(135deg,#5b4bff,#8f7bff)" href="/category/tech">
-      <svg class="i"><use href="#i-cpu"/></svg><div>Tech<br><small>View stories</small></div>
-    </a>
-    <a class="ct" style="background:linear-gradient(135deg,#ff5d8f,#ff9a6c)" href="/category/design">
-      <svg class="i"><use href="#i-pen"/></svg><div>Design<br><small>View stories</small></div>
-    </a>
-    <a class="ct" style="background:linear-gradient(135deg,#0ea5a5,#4ad6b8)" href="/category/travel">
-      <svg class="i"><use href="#i-plane"/></svg><div>Travel<br><small>View stories</small></div>
-    </a>
+    {categories.map(cat => {
+      const info = CATS[cat];
+      const count = posts.filter(p => p.category === cat).length;
+      return (
+        <a class="ct" style={`background:linear-gradient(135deg,${info.c[0]},${info.c[1]})`} href={`/category/${cat.toLowerCase()}`}>
+          <svg class="i"><use href={`#i-${info.k}`}/></svg>
+          <div>{cat}<br><small>{count} stories</small></div>
+        </a>
+      )
+    })}
   </div>
 
   <div class="two">
-    <!-- Main Content Area (Left) -->
     <div>
       <div class="h2"><h2>Latest stories</h2></div>
-      <div class="grid">
-        {posts.map((post: any) => (
-          <a class="card" href={`/post/${post.file.split('/').pop().replace('.md', '')}`}>
-            <div class="art" style="background:linear-gradient(135deg,#5b4bff,#8f7bff)">
-              <svg viewBox="0 0 24 24"><use href="#i-cpu"/></svg>
-            </div>
-            <div class="b">
-              <span><span class="badge" style="background:#5b4bff">{post.frontmatter.category}</span></span>
-              <h3>{post.frontmatter.title}</h3>
-              <p>Read full story...</p>
-              <div class="meta">
-                <span>{post.frontmatter.author}</span>
-                <span><svg class="i"><use href="#i-clock"/></svg>5 min read</span>
-                <span>{post.frontmatter.date}</span>
+      <div class="grid" id="lg">
+        {gridPosts.map(post => {
+          const catInfo = getCatInfo(post.category);
+          return (
+            <a class="card" href={`/post/${post.slug}`}>
+              <div class="art" style={`background:linear-gradient(135deg,${catInfo.c[0]},${catInfo.c[1]})`}>
+                <svg viewBox="0 0 24 24"><use href={`#i-${catInfo.k}`}/></svg>
               </div>
-            </div>
-          </a>
-        ))}
+              <div class="b">
+                <span><span class="badge" style={`background:${catInfo.c[0]}`}>{post.category}</span></span>
+                <h3>{post.title}</h3>
+                <div class="meta">
+                  <span>{post.author}</span>
+                  <span><svg class="i"><use href="#i-clock"/></svg>{post.readTime} min</span>
+                  <span>{formatDate(post.date)}</span>
+                </div>
+              </div>
+            </a>
+          )
+        })}
       </div>
     </div>
 
-    <!-- Sidebar Area (Right) -->
     <aside>
-      <AdUnit format="300x250" />
+      <AdUnit code="" />
+      <div class="box">
+        <h3>Trending</h3>
+        {popularPosts.map(post => {
+          const catInfo = getCatInfo(post.category);
+          return (
+            <a class="row" href={`/post/${post.slug}`}>
+              <div class="art" style={`background:linear-gradient(135deg,${catInfo.c[0]},${catInfo.c[1]})`}>
+                <svg viewBox="0 0 24 24"><use href={`#i-${catInfo.k}`}/></svg>
+              </div>
+              <div>
+                <span class="meta">{post.category}</span>
+                <h4>{post.title}</h4>
+                <span class="meta"><span><svg class="i"><use href="#i-eye"/></svg>{post.views.toLocaleString()}</span></span>
+              </div>
+            </a>
+          )
+        })}
+      </div>
       
       <div class="box">
         <h3>Popular tags</h3>
         <div class="chips">
-          <a href="/tags/web"><svg class="i"><use href="#i-tag"/></svg>web</a>
-          <a href="/tags/design"><svg class="i"><use href="#i-tag"/></svg>design</a>
-          <a href="/tags/tech"><svg class="i"><use href="#i-tag"/></svg>tech</a>
+          {tags.map(tag => (
+            <a href={`/tags/${tag}`}><svg class="i"><use href="#i-tag"/></svg>{tag}</a>
+          ))}
         </div>
       </div>
-      
-      <div class="ad2 stick">
-        <AdUnit format="160x600" />
-      </div>
+      <div class="ad2 stick"><AdUnit code="" /></div>
     </aside>
   </div>
+
+  <script is:inline>
+    // Hero Slider Logic
+    const sl = document.getElementById('sl');
+    if(sl) {
+      let sIdx = 0, timer;
+      const n = document.querySelectorAll('.sd').length;
+      const go = i => {
+        sIdx = i;
+        document.querySelectorAll('.sd').forEach((e, k) => e.classList.toggle('on', k === i));
+        document.querySelectorAll('.dots button').forEach((e, k) => e.classList.toggle('on', k === i));
+      };
+      const still = matchMedia('(prefers-reduced-motion:reduce)').matches;
+      if (!still) timer = setInterval(() => {
+        if (!document.hidden && !sl.matches(':hover,:focus-within')) go((sIdx + 1) % n);
+      }, 5000);
+      document.querySelector('.dots').onclick = e => {
+        const b = e.target.closest('button');
+        if (b) { clearInterval(timer); go(+b.dataset.i); }
+      };
+    }
+  </script>
 </BaseLayout>

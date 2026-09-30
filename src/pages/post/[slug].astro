@@ -1,45 +1,118 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import AdUnit from '../../components/AdUnit.astro';
+import { getCatInfo, getReadTime, formatDate } from '../../utils/helpers.js';
 
 export async function getStaticPaths() {
-  // Use import.meta.glob instead of Astro.glob
-  const posts = import.meta.glob('../../content/*.md', { eager: true });
-  
-  // Convert the object returned by glob into an array of routes
-  return Object.values(posts).map((post: any) => {
-    // Extract the filename without the .md extension to use as the URL slug
-    const filename = post.file.split('/').pop().replace('.md', '');
-    
-    return {
-      params: { slug: filename },
-      props: { post },
-    };
-  });
+  const posts = Object.values(import.meta.glob('../../content/*.md', { eager: true }));
+  return posts.map((post: any) => ({
+    params: { slug: post.file.split('/').pop().replace('.md', '') },
+    props: { post },
+  }));
 }
 
 const { post } = Astro.props;
-const { Content } = post;
+const { title, author, date, category, tags = [], views = Math.floor(Math.random() * 5000) } = post.frontmatter;
+
+// Helpers for current post
+const catInfo = getCatInfo(category);
+const readTime = getReadTime(post.rawContent ? post.rawContent() : post.body);
+
+// Find Related Posts
+const allPosts = Object.values(import.meta.glob('../../content/*.md', { eager: true }))
+  .map((p: any) => ({ ...p.frontmatter, slug: p.file.split('/').pop().replace('.md', '') }))
+  .filter((p: any) => p.slug !== Astro.params.slug); // Exclude the post we are currently viewing
+
+const relatedPosts = allPosts.filter((p: any) => 
+  p.category === category || (p.tags && p.tags.some((t: string) => tags.includes(t)))
+).slice(0, 2); // Grab the top 2 closest matches
 ---
 
-<BaseLayout title={post.frontmatter.title}>
+<BaseLayout title={`${title} - Northlight`} description={title}>
   <article class="post">
-    <span class="crumb"><a href="/">Home</a> / <span>{post.frontmatter.category}</span></span>
-    <h1>{post.frontmatter.title}</h1>
+    <span class="crumb"><a href="/">Home</a> / <a href={`/category/${category.toLowerCase()}`}>{category}</a></span>
+    <h1>{title}</h1>
     
     <div class="au">
-      <div class="av">{post.frontmatter.author[0]}</div>
+      <div class="av" style={`background:linear-gradient(135deg,${catInfo.c[0]},${catInfo.c[1]})`}>{author[0]}</div>
       <div>
-        <b>{post.frontmatter.author}</b>
+        <b>{author}</b>
         <div class="meta">
-          <span>{post.frontmatter.date}</span>
+          <span>{formatDate(date)}</span>
+          <span><svg class="i"><use href="#i-clock"/></svg>{readTime} min read</span>
+          <span><svg class="i"><use href="#i-eye"/></svg>{views.toLocaleString()}</span>
         </div>
       </div>
     </div>
-    
-    <div class="art hd" style="background:linear-gradient(135deg,#5b4bff,#8f7bff)"></div>
-    
-    <div class="bd">
-      <Content />
+
+    <!-- Article Hero Graphic -->
+    <div class="art hd" style={`background:linear-gradient(135deg,${catInfo.c[0]},${catInfo.c[1]})`}>
+      <svg viewBox="0 0 24 24"><use href={`#i-${catInfo.k}`}/></svg>
     </div>
+    
+    <!-- Markdown Content -->
+    <div class="bd">
+      <post.Content />
+    </div>
+
+    <!-- Tags -->
+    <div class="chips">
+      {tags.map((tag: string) => (
+        <a href={`/tags/${tag}`}><svg class="i"><use href="#i-tag"/></svg>{tag}</a>
+      ))}
+    </div>
+    
+    <!-- Share & Copy Buttons -->
+    <div class="sh">
+      <button id="cp"><svg class="i"><use href="#i-link"/></svg>Copy link</button>
+      <button id="shr"><svg class="i"><use href="#i-share"/></svg>Share</button>
+    </div>
+    
+    <!-- In-article Ad -->
+    <AdUnit code="" />
   </article>
+
+  <!-- Related Stories -->
+  {relatedPosts.length > 0 && (
+    <div class="h2" style="margin-top: 48px;"><h2>Related stories</h2></div>
+    <div class="grid g3">
+      {relatedPosts.map((rel: any) => {
+        const relCat = getCatInfo(rel.category);
+        return (
+          <a class="card" href={`/post/${rel.slug}`}>
+            <div class="art" style={`background:linear-gradient(135deg,${relCat.c[0]},${relCat.c[1]})`}>
+              <svg viewBox="0 0 24 24"><use href={`#i-${relCat.k}`}/></svg>
+            </div>
+            <div class="b">
+              <span><span class="badge" style={`background:${relCat.c[0]}`}>{rel.category}</span></span>
+              <h3>{rel.title}</h3>
+            </div>
+          </a>
+        )
+      })}
+    </div>
+  )}
+
+  <!-- Client-side script for sharing -->
+  <script is:inline>
+    const cp = document.getElementById('cp');
+    const shr = document.getElementById('shr');
+    
+    if (cp) {
+      cp.onclick = e => {
+        if(navigator.clipboard) navigator.clipboard.writeText(location.href);
+        e.currentTarget.innerHTML = '<svg class="i"><use href="#i-check"/></svg>Copied';
+      };
+    }
+    
+    if (shr) {
+      shr.onclick = () => {
+        if(navigator.share) {
+          navigator.share({title: document.title, url: location.href});
+        } else {
+          cp.click(); // Fallback to copy if native share isn't supported
+        }
+      };
+    }
+  </script>
 </BaseLayout>
